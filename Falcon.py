@@ -26,7 +26,7 @@ from PyQt5.QtWidgets import (QWidget, QApplication, QPushButton, QLineEdit,
                              QFileDialog, QMainWindow, QMessageBox, QTextEdit, QMenu, QFrame, )
 from PyQt5.QtGui import (QDesktopServices, QKeySequence,QPainter,QPen)
 
-from config import mainpanel
+
 
 import numpy as np
 import time
@@ -67,6 +67,8 @@ class MainWindow(QMainWindow):
         self.createMenus()
         self.setCentralWidget(self.createCentralWidget())
 
+        config.data_folder = config.get_savedparam("param", "initialdata_folder")
+
         
         
    
@@ -78,13 +80,10 @@ class MainWindow(QMainWindow):
             the menu is checked to reflect the default brightness.
             メニューバーの作成
         """
-
-           
-
         
-        self.removebackground = QAction("&Remove background", self)
+        self.removebackground = QAction("&Remove Background", self)
         self.removebackground.setShortcut("Ctrl+B")
-        self.removebackground.triggered.connect(self.MakeRemovebackgroundWindow)
+        self.removebackground.triggered.connect(self.MakeRemoveBackgroundWindow)
        
 
         self.noisefilter = QAction("&Noise Filter", self)
@@ -95,11 +94,14 @@ class MainWindow(QMainWindow):
         self.lineprofile.setShortcut("Ctrl+L")
         self.lineprofile.triggered.connect(self.MakeLineWindow)
 
-        self.Setting = QAction("&Setting", self)
-        self.Setting.setShortcut("Ctrl+S")
-        self.Setting.triggered.connect(self.MakeSettingWindow)
+        self.panelsetting = QAction("&Panel Setting", self)
+        self.panelsetting.setShortcut("Ctrl+P")
+        self.panelsetting.triggered.connect(self.getPanelSize)
 
-       
+        self.foldersetting = QAction("&Folder Setting", self)
+        self.foldersetting.setShortcut("Ctrl+F")
+        self.foldersetting.triggered.connect(self.initialfolder_setting)
+      
         
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&Image Processing')
@@ -109,11 +111,11 @@ class MainWindow(QMainWindow):
         fileMenu = menubar.addMenu('&Analysis')
         fileMenu.addAction(self.lineprofile)
 
-        ileMenu = menubar.addMenu('&Setting')
-        fileMenu.addAction(self.setting)
-     
-
-
+        
+        fileMenu = menubar.addMenu('&Setting')
+        fileMenu.addAction(self.foldersetting)
+        fileMenu.addAction(self.panelsetting)
+        
     
     def createCentralWidget(self):
         """ Constructs a central widget for the window consisting of a two-by-two
@@ -124,10 +126,18 @@ class MainWindow(QMainWindow):
 
         frame = QFrame(self)
         
-       
+        result = config.get_savedparam("panel", "FalconPy Main")
+        if result is not None:
+          # 一致する行が見つかった場合は、resultを処理する
+           config.panel_left, config.panel_top, config.panel_width, config.panel_height = result
+        else:
+            config.panel_width= 300
+            config.panel_height = 200
+            config.panel_top = 100
+            config.panel_left = 100
         
-        self.resize(mainpanel.width, mainpanel.height)
-        self.move(mainpanel.left, mainpanel.top)
+        self.resize(config.panel_width, config.panel_height)
+        self.move(config.panel_left, config.panel_top)
 
         self.setWindowTitle('FalconPy Main')
         self.crFileControls("Select Files")
@@ -363,13 +373,28 @@ class MainWindow(QMainWindow):
         layout.addStretch(20)
 
         self.commentGroup.setLayout(layout)
+    
+    def initialfolder_setting(self):
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+
+        dirname = QFileDialog.getExistingDirectory(self,
+                                                   'open folder',
+                                                   config.data_folder,
+                                                   QFileDialog.ShowDirsOnly)
+        
+        if dirname is not None and dirname != "":
+            config.data_folder = dirname 
+        
+            config.save_params("param", "initialdata_folder", config.data_folder)
 
     def show_folder_dialog(self):
         ''' open dialog and set to foldername '''
-        initial_dir = 'Q:\AFM Data'
+        
         dirname = QFileDialog.getExistingDirectory(self,
                                                    'open folder',
-                                                  initial_dir, #os.path.expanduser('.'),
+                                                  config.data_folder , #os.path.expanduser('.'),
                                                    QFileDialog.ShowDirsOnly)
 
         if dirname:
@@ -379,6 +404,7 @@ class MainWindow(QMainWindow):
             self.step = 0
 
         self.file_open()
+
 
     def openHeaderOfFile(self, row, column):
         # item = self.filesTable.item(row, 0)
@@ -427,6 +453,8 @@ class MainWindow(QMainWindow):
         # self.files = []
         if os.path.exists(self.dirname):
             # try:
+
+            #print(self.dirname)
 
             QApplication.setOverrideCursor(Qt.WaitCursor)
             config.files = self.fileList.setup(self.dirname, '.asd')
@@ -490,6 +518,67 @@ class MainWindow(QMainWindow):
         self.comment.setText(config.Comment)
 
    
+    def getPanelSize(self):
+        for widget in QApplication.topLevelWidgets():
+            if isinstance(widget, QWidget):
+                 title = widget.windowTitle()
+                 config.panel_height = widget.geometry().height()
+                 config.panel_width= widget.geometry().width()
+                 config.panel_left = widget.geometry().left()
+                 config.panel_top = widget.geometry().top()
+
+                 
+                 config.save_params("panel",title, 0)               
+ 
+            # result = self.get_savedparam("panel", "FalconPy Main")
+
+            # if result is not None:
+            #     # 一致する行が見つかった場合は、resultを処理する
+            #     val2, val3, val4, val5 = result
+            #     print(f"2列目の値: {val2}")
+            #     print(f"3列目の値: {val3}")
+            #     print(f"4列目の値: {val4}")
+            #     print(f"5列目の値: {val5}")
+            # else:
+            #     pass
+            
+            # with open("falconviewer.parm", "w") as file:
+            #     # ファイルの最初の行に"FalconPy Main", 0, 1, 2, 3を書き込む
+            #     file.write("FalconPy Main, 0, 1, 2, 3\n")
+    
+            #     # 2行目に"Test", 1, 2, 3, 4を書き込む
+            #     file.write("Test, 1, 2, 3, 4\n")
+
+            #ファイルを読み込んで一行ずつ処理する
+            # with open("Falconviewer.parm", "r") as file:
+            #     lines = file.readlines()
+
+            # # 行ごとに処理する
+            # for i, line in enumerate(lines):
+    
+            #     # 行に"Test"が含まれている場合
+            #     if "Test" in line:
+        
+            #         # 行をカンマで分割し、3番目の数値を100に変更する
+            #         parts = line.strip().split(",")
+            #         parts[2] = "30"
+        
+            #         # 変更後の行を作成する
+            #         new_line = ",".join(parts) + "\n"
+        
+            #         # 変更後の行に置き換える
+            #         lines[i] = new_line
+
+            # # ファイルを書き込みモードで開いて、変更後の内容を書き込む
+            # with open("Falconviewer.parm", "w") as file:
+            #     file.writelines(lines)
+
+
+
+    
+
+    
+
 
     def SetF_SliderValue(self,value):
         # self.frameSlider.setValue(value)
@@ -662,7 +751,7 @@ class MainWindow(QMainWindow):
             dl.MakeProfileWindow()
             dl.MouseSet("img1ch")
     
-    def MakeRemovebackgroundWindow(self):
+    def MakeRemoveBackgroundWindow(self):
         self.Removebackgroundwindow=rb.RemovebackgroundWindow()
         self.Removebackgroundwindow.show()
 
@@ -671,9 +760,9 @@ class MainWindow(QMainWindow):
         self.Noisefilterwindow=nf.NoisefilterWindow()
         self.Noisefilterwindow.show()
     
-    def MakeSettingWindow(self):
-        self.Settingwindow=st.SettingWindow()
-        self.Settingwindow.show()
+    #def  MakeSettingWindow(self):
+    #    self.Foldersettingwindow=st.FoldersettingWindow()
+    #    self.Foldersettingwindow.show()
 
        
 
