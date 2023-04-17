@@ -1,3 +1,16 @@
+## .gitignore file contains the files and folders that should not be tracked by git
+##
+## to add a file or folder to this list, use the following command
+## git rm -r --cached <file or folder name>
+##
+## to remove a file or folder from this list, use the following command
+## git add <file or folder name>
+##
+## to remove all files and folders from this list, use the following command
+## git rm -r --cached .
+##
+## Last updated: 2023-04-17 Shaoma
+
 __pycache__/
 .vs/
 .vscode/
