@@ -143,7 +143,7 @@ def save_params(type, name, variable):
             file.truncate()
 
 def get_savedparam(type, name):
-    with open("FalconViewer.parm", "r") as file:
+    with open("FalconViewer.parm", "r", encoding = 'utf-8') as file:
         data = None  # デフォルト値を設定
         for line in file:
             # 行をカンマで分割して、最初の要素がtypeと一致するかをチェックする

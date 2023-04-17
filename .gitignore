@@ -11,7 +11,26 @@
 ##
 ## Last updated: 2023-04-17 Shaoma
 
+# Python related
 __pycache__/
-.vs/
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.pyc
+
+# Virtual environment
+venv/
+.env/
+ENV/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Mac related
+.DS_Store
+
+# Visual Studio Code related
 .vscode/
 *.code-workspace
+.history/
