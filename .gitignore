@@ -1,4 +1,4 @@
-__pycache__
-.vs
-.vscode
+__pycache__/
+.vs/
+.vscode/
 *.code-workspace
